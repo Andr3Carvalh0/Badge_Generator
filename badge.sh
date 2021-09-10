@@ -1,13 +1,14 @@
 #!/bin/bash
 
-CHAR_SIZE="68"
-FONT_SIZE="0.60"
+MIN_CHAR_SIZE="57.5"
+MIN_FONT_SIZE="0.48"
+
 MARGIN="10"
 FONT_SCALE="100"
 
 help() {
 	echo ""
-	echo "Usage: $0 -k key -v value -c #hexValue"
+	echo "Usage: $0 -k key -v value -c #hexValue -s filename"
 	echo "\t-k The value to be displayed on the left side of the badge"
 	echo "\t-v The value to be displayed on the right side of the badge"
 	echo "\t-c The hex value for the value side background. Must include #"
@@ -41,8 +42,9 @@ fi
 function calculateContainer() {
 	local text=$1
 	local amountOfLetters=${#text}
+	local normalizedSize=$(awk -v size="${amountOfLetters}" -v min="${MIN_CHAR_SIZE}" 'BEGIN{result=(min + ((size / 5) * 4)); print result;}')
 
-	local width=$(awk -v size="${amountOfLetters}" -v font_size="${CHAR_SIZE}" -v margin="${MARGIN}" 'BEGIN{result=(((size * font_size) / margin) + margin); print result;}')
+	local width=$(awk -v size="${amountOfLetters}" -v font_size="${normalizedSize}" -v margin="${MARGIN}" 'BEGIN{result=(((size * font_size) / margin) + margin); print result;}')
 	
 	echo $width
 }
@@ -50,6 +52,7 @@ function calculateContainer() {
 function calculateTextSize() {
 	local text=$1
 	local amountOfLetters=${#text}
+	local normalizedSize=$(awk -v size="${amountOfLetters}" -v min="${MIN_FONT_SIZE}" 'BEGIN{result=(min + (size / 100)); print result;}')
 
 	local size=$(awk -v size="${amountOfLetters}" -v font_size="${FONT_SIZE}" -v scale="${FONT_SCALE}" -v margin="${MARGIN}" 'BEGIN{result=(size * font_size * (scale + margin)); print result;}')
 	
