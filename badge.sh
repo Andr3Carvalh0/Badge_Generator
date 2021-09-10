@@ -1,29 +1,35 @@
 #!/bin/bash
+#
+# Created by André Carvalho in September 2021
+# Last modifies: 10th September 2021
+#
+# A very optimistic & naive implementation of https://github.com/google/pybadges in a shell script.
+#
 
 MIN_CHAR_SIZE="57.5"
 MIN_FONT_SIZE="0.48"
-
 MARGIN="10"
 FONT_SCALE="100"
 
-help() {
+function help() {
 	echo ""
-	echo "Usage: $0 -k key -v value -c #hexValue -s filename"
-	echo "\t-k The value to be displayed on the left side of the badge"
-	echo "\t-v The value to be displayed on the right side of the badge"
-	echo "\t-c The hex value for the value side background. Must include #"
-	echo "\t-s The filename for the output file"
+	echo "Usage: $0 -k key -v value"
+	echo "\t-k, --key\t The value to be displayed on the left side of the badge"
+	echo "\t-v, --value\t The value to be displayed on the right side of the badge"
+	echo "\t-c, --color\t The hex value for the value side background"
+	echo "\t-o, --output\t The name of the output file"
 	exit 1
 }
 
-while getopts "k:v:c:s:" opt; do
-	case "$opt" in
-	k) key="$OPTARG" ;;
-	v) value="$OPTARG" ;;
-	c) color="$OPTARG" ;;
-	s) filename="$OPTARG" ;;
-	?) help ;;
+while [ $# -gt 0 ]; do
+	case "$1" in
+		-k|-key|--key) key="$2" ;;
+		-v|-value|--value) value="$2" ;;
+		-c|-color|--color) color="$2" ;;
+		-o|-output|--output) filename="$2" ;;
 	esac
+	shift
+	shift
 done
 
 if [ -z "$key" ] || [ -z "$value" ]; then
@@ -33,13 +39,17 @@ fi
 
 if [ -z "$color" ]; then
 	color="#007ec6"
+else
+	if [[ $color != \#* ]]; then
+		color="#$color"
+	fi
 fi
 
 if [ -z "$filename" ]; then
-	filename="badge"
+	filename="output.svg"
 fi
 
-function calculateContainer() {
+function calculateWidth() {
 	local text=$1
 	local amountOfLetters=${#text}
 	local normalizedSize=$(awk -v size="${amountOfLetters}" -v min="${MIN_CHAR_SIZE}" 'BEGIN{result=(min + ((size / 5) * 4)); print result;}')
@@ -63,11 +73,11 @@ function generate() {
 	local key=$1
 	local value=$2
 	
-	local leftWidth="$(calculateContainer $key)"
+	local leftWidth="$(calculateWidth $key)"
 	local leftX=$(awk -v left="${leftWidth}" 'BEGIN{result=(((left / 2) + 1) * 10); print result;}')
 	local leftLength=$(calculateTextSize $key)
 
-	local rightWidth="$(calculateContainer $value)"
+	local rightWidth="$(calculateWidth $value)"
 	local rightX=$(awk -v left="${leftWidth}" -v right="${rightWidth}" 'BEGIN{result=(((left + (right / 2)) - 1) * 10); print result;}')
 	local rightLength=$(calculateTextSize $value)
 
@@ -100,7 +110,7 @@ function save() {
    local badge=$1
    local filename=$2
 
-   echo $badge > ${filename}.svg
+   echo $badge > $filename
 }
 
 save "$(generate $key $value)" $filename
