@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # Created by André Carvalho in September 2021
-# Last modifies: 10th September 2021
+# Last modified: 11th September 2021
 #
 # A very optimistic & naive implementation of https://github.com/google/pybadges in a shell script.
 #
@@ -40,7 +40,7 @@ fi
 if [ -z "$color" ]; then
 	color="#007ec6"
 else
-	if [[ $color != \#* ]]; then
+	if [[ "$color" != \#* ]]; then
 		color="#$color"
 	fi
 fi
@@ -50,7 +50,7 @@ if [ -z "$filename" ]; then
 fi
 
 function calculateWidth() {
-	local text=$1
+	local text="$1"
 	local amountOfLetters=${#text}
 	local normalizedSize=$(awk -v size="${amountOfLetters}" -v min="${MIN_CHAR_SIZE}" 'BEGIN{result=(min + ((size / 5) * 4)); print result;}')
 
@@ -60,7 +60,7 @@ function calculateWidth() {
 }
 
 function calculateTextSize() {
-	local text=$1
+	local text="$1"
 	local amountOfLetters=${#text}
 	local normalizedSize=$(awk -v size="${amountOfLetters}" -v min="${MIN_FONT_SIZE}" 'BEGIN{result=(min + (size / 100)); print result;}')
 
@@ -70,19 +70,20 @@ function calculateTextSize() {
 }
 
 function generate() {
-	local key=$1
-	local value=$2
+	local key="$1"
+	local value="$2"
+	local color="$3"
 	
-	local leftWidth="$(calculateWidth $key)"
+	local leftWidth="$(calculateWidth "$key")"
 	local leftX=$(awk -v left="${leftWidth}" 'BEGIN{result=(((left / 2) + 1) * 10); print result;}')
-	local leftLength=$(calculateTextSize $key)
+	local leftLength=$(calculateTextSize "$key")
 
-	local rightWidth="$(calculateWidth $value)"
+	local rightWidth="$(calculateWidth "$value")"
 	local rightX=$(awk -v left="${leftWidth}" -v right="${rightWidth}" 'BEGIN{result=(((left + (right / 2)) - 1) * 10); print result;}')
-	local rightLength=$(calculateTextSize $value)
+	local rightLength=$(calculateTextSize "$value")
 
 	local totalWidth=$(awk -v left="${leftWidth}" -v right="${rightWidth}" 'BEGIN{result=(left + right); print result;}')
-
+	
 	echo "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
 			<svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" width=\"${totalWidth}\" height=\"20\">
 				<linearGradient id=\"smooth\" x2=\"0\" y2=\"100%\">
@@ -107,10 +108,10 @@ function generate() {
 }
 
 function save() {
-   local badge=$1
-   local filename=$2
+	local badge="$1"
+	local filename="$2"
 
-   echo $badge > $filename
+	echo $badge > $filename
 }
 
-save "$(generate $key $value)" $filename
+save "$(generate "$key" "$value" "$color")" "$filename"
